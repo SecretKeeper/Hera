@@ -1,28 +1,22 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+extern crate openssl;
+#[macro_use]
+extern crate diesel_migrations;
+extern crate diesel;
+extern crate gateway_rust;
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
+use actix_web::{web, App, HttpServer};
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+mod controllers;
+pub use controllers::auth_controller::{hello, login, register};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
+            .service(web::scope("/auth").service(register).service(login))
     })
-    .bind("0.0.0.0:8080")?
+    .bind("0.0.0.0:3333")?
     .run()
     .await
 }
