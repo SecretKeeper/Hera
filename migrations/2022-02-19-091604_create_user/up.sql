@@ -1,10 +1,10 @@
 -- Your SQL goes here
 CREATE TABLE users(
     id SERIAL PRIMARY KEY,
-    solana_pubkey VARCHAR DEFAULT NULL,
-    ethereum_pubkey VARCHAR DEFAULT NULL,
-    username VARCHAR DEFAULT NULL,
-    email VARCHAR DEFAULT NULL,
+    solana_pubkey VARCHAR UNIQUE DEFAULT NULL,
+    ethereum_pubkey VARCHAR UNIQUE DEFAULT NULL,
+    username VARCHAR UNIQUE DEFAULT NULL,
+    email VARCHAR UNIQUE UNIQUE DEFAULT NULL,
     password VARCHAR DEFAULT NULL,
     avatar TEXT DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
