@@ -7,8 +7,11 @@ use dotenv::dotenv;
 
 use std::env;
 
-use actix::{Addr, SyncArbiter};
-use actix_web::{web, App, HttpServer};
+use actix::SyncArbiter;
+use actix_web::{
+    web::{self, Data},
+    App, HttpServer,
+};
 
 mod controllers;
 pub use controllers::auth_controller::{hello, login, register};
@@ -17,11 +20,6 @@ use diesel::{
     PgConnection,
 };
 use gateway_rust::repositories::db::DbExecutor;
-
-/// State with DbExecutor address
-struct AppState {
-    db: Addr<DbExecutor>,
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -34,11 +32,11 @@ async fn main() -> std::io::Result<()> {
         .build(manager)
         .expect("Failed to create pool.");
 
-    let addr = SyncArbiter::start(12, move || DbExecutor(pool.clone()));
+    let addr = Data::new(SyncArbiter::start(12, move || DbExecutor(pool.clone())));
 
     HttpServer::new(move || {
         App::new()
-            .data(AppState { db: addr.clone() })
+            .app_data(addr.clone())
             .service(hello)
             .service(web::scope("/auth").service(register).service(login))
     })
