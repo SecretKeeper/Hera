@@ -3,7 +3,7 @@ use chrono::NaiveDateTime;
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Queryable, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
     pub solana_pubkey: Option<String>,
@@ -22,5 +22,11 @@ pub struct User {
 pub struct CreateUser {
     pub username: String,
     pub email: String,
+    pub password: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Login {
+    pub username: String,
     pub password: String,
 }
