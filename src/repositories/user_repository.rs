@@ -1,4 +1,5 @@
-use crate::models::{CreateUser, User};
+use crate::errors::ServiceError;
+use crate::models::{CreateUser, Login, User};
 use crate::schema::users::dsl::*;
 use actix::{Handler, Message, SyncContext};
 use blake3::Hasher;
@@ -30,5 +31,40 @@ impl Handler<CreateUser> for DbExecutor {
             .expect("cant insert user");
 
         Ok(inserted_user)
+    }
+}
+
+impl Message for Login {
+    type Result = Result<User, ServiceError>;
+}
+
+impl Handler<Login> for DbExecutor {
+    type Result = Result<User, ServiceError>;
+
+    fn handle(&mut self, creds: Login, _: &mut SyncContext<Self>) -> Self::Result {
+        let conn: &PgConnection = &self.0.get().unwrap();
+
+        let mut hasher = Hasher::new();
+
+        hasher.update(&creds.password.as_bytes());
+
+        let mut found_users = users
+            .filter(username.eq(&creds.username))
+            .load::<User>(conn)?;
+
+        if let Some(user) = found_users.pop() {
+            if user.password.as_deref().unwrap_or("")
+                == hasher
+                    .finalize()
+                    .to_hex()
+                    .chars()
+                    .collect::<String>()
+                    .to_string()
+            {
+                return Ok(user.into());
+            }
+        }
+
+        Err(ServiceError::Unauthorized)
     }
 }
