@@ -1,17 +1,26 @@
+use super::schema::users;
 use chrono::NaiveDateTime;
-use diesel::Queryable;
+use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Queryable, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Queryable, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
-    pub solana_pubkey: String,
-    pub ethereum_pubkey: String,
+    pub solana_pubkey: Option<String>,
+    pub ethereum_pubkey: Option<String>,
+    pub username: Option<String>,
+    pub email: Option<String>,
+    pub password: Option<String>,
+    pub avatar: Option<String>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
+    pub deleted_at: Option<NaiveDateTime>,
+}
+
+#[derive(Debug, Insertable, Serialize, Deserialize)]
+#[table_name = "users"]
+pub struct CreateUser {
     pub username: String,
     pub email: String,
     pub password: String,
-    pub avatar: String,
-    pub created_at: chrono::NaiveDateTime,
-    pub updated_at: Option<NaiveDateTime>,
-    pub deleted_at: Option<NaiveDateTime>,
 }
