@@ -21,3 +21,4 @@ serde_with = { version = "1.12.0", features = ["json"]}
 # Needed for Postgres.
 openssl = "*"
 openssl-probe = "0.1.2"
+blake3 = "1.3.1"
