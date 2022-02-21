@@ -4,7 +4,10 @@ use actix_web::{
     web::{self, Data},
     HttpResponse, Responder,
 };
-use gateway_rust::{models::CreateUser, repositories::db::DbExecutor};
+use gateway_rust::{
+    models::{CreateUser, Login},
+    repositories::db::DbExecutor,
+};
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -15,13 +18,16 @@ async fn hello() -> impl Responder {
 async fn register(
     (new_user, addr): (web::Json<CreateUser>, Data<Addr<DbExecutor>>),
 ) -> impl Responder {
-    let create_message = addr.send(new_user.into_inner()).await;
-    let user = create_message.unwrap();
+    let actix_message = addr.send(new_user.into_inner()).await;
+    let user = actix_message.unwrap();
 
     web::Json(user.ok())
 }
 
 #[post("/signin")]
-async fn login(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+async fn login((creds, addr): (web::Json<Login>, Data<Addr<DbExecutor>>)) -> impl Responder {
+    let actix_message = addr.send(creds.into_inner()).await;
+    let user = actix_message.unwrap();
+
+    web::Json(user.ok())
 }
