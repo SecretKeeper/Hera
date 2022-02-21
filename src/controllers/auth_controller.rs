@@ -1,25 +1,21 @@
 use actix_web::{get, post, web, HttpResponse, Responder};
-use serde::{Deserialize, Serialize};
+use gateway_rust::models::CreateUser;
+
+use crate::AppState;
 
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Secret Keeper greats you")
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct CreateUser {
-    username: String,
-    email: String,
-    password: String,
-}
-
 #[post("/signup")]
-async fn register(auth_data: web::Json<CreateUser>) -> impl Responder {
-    return web::Json(CreateUser {
-        username: auth_data.username.to_string(),
-        email: auth_data.username.to_string(),
-        password: "4563221".to_string(),
-    });
+async fn register(
+    (new_user, state): (web::Json<CreateUser>, web::Data<AppState>),
+) -> impl Responder {
+    let create_message = state.db.send(new_user.into_inner()).await;
+    let user = create_message.unwrap();
+
+    web::Json(user.ok())
 }
 
 #[post("/signin")]
