@@ -21,6 +21,8 @@ use diesel::{
 };
 use gateway_rust::repositories::db::DbExecutor;
 
+embed_migrations!("./migrations");
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -31,6 +33,8 @@ async fn main() -> std::io::Result<()> {
     let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Failed to create pool.");
+
+    embedded_migrations::run(&pool.get().expect("cant get connection pool")).unwrap();
 
     let addr = Data::new(SyncArbiter::start(12, move || DbExecutor(pool.clone())));
 
