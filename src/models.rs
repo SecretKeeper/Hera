@@ -26,7 +26,21 @@ pub struct CreateUser {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Login {
+pub struct LoginRequest {
     pub username: String,
     pub password: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct UserResponse {
+    pub user_id: i32,
+    pub username: String,
+    pub email: String,
+    pub avatar: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LoginResponse {
+    pub user: UserResponse,
+    pub token: String,
 }
