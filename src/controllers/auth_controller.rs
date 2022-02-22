@@ -5,7 +5,7 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use gateway_rust::{
-    models::{CreateUser, Login},
+    models::{CreateUser, LoginRequest},
     repositories::db::DbExecutor,
 };
 
@@ -25,7 +25,7 @@ async fn register(
 }
 
 #[post("/signin")]
-async fn login((creds, addr): (web::Json<Login>, Data<Addr<DbExecutor>>)) -> impl Responder {
+async fn login((creds, addr): (web::Json<LoginRequest>, Data<Addr<DbExecutor>>)) -> impl Responder {
     let actix_message = addr.send(creds.into_inner()).await;
     let user = actix_message.unwrap();
 
