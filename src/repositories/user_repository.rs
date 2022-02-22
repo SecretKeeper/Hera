@@ -1,11 +1,13 @@
+use crate::auth::auth;
 use crate::errors::ServiceError;
-use crate::models::{CreateUser, Login, User};
+use crate::models::{CreateUser, LoginRequest, LoginResponse, User, UserResponse};
 use crate::schema::users::dsl::*;
 use actix::{Handler, Message, SyncContext};
 use blake3::Hasher;
 use diesel::associations::HasTable;
 use diesel::prelude::*;
 use diesel::result::Error;
+use jsonwebtoken::{Algorithm, Header};
 
 use super::db::DbExecutor;
 
@@ -34,14 +36,14 @@ impl Handler<CreateUser> for DbExecutor {
     }
 }
 
-impl Message for Login {
-    type Result = Result<User, ServiceError>;
+impl Message for LoginRequest {
+    type Result = Result<LoginResponse, ServiceError>;
 }
 
-impl Handler<Login> for DbExecutor {
-    type Result = Result<User, ServiceError>;
+impl Handler<LoginRequest> for DbExecutor {
+    type Result = Result<LoginResponse, ServiceError>;
 
-    fn handle(&mut self, creds: Login, _: &mut SyncContext<Self>) -> Self::Result {
+    fn handle(&mut self, creds: LoginRequest, _: &mut SyncContext<Self>) -> Self::Result {
         let conn: &PgConnection = &self.0.get().unwrap();
 
         let mut hasher = Hasher::new();
@@ -52,6 +54,9 @@ impl Handler<Login> for DbExecutor {
             .filter(username.eq(&creds.username))
             .load::<User>(conn)?;
 
+        let mut header = Header::new(Algorithm::HS512);
+        header.kid = Some("blabla".to_owned());
+
         if let Some(user) = found_users.pop() {
             if user.password.as_deref().unwrap_or("")
                 == hasher
@@ -61,7 +66,18 @@ impl Handler<Login> for DbExecutor {
                     .collect::<String>()
                     .to_string()
             {
-                return Ok(user.into());
+                let token = auth::create_jwt(&user.id, &"user".to_string())
+                    .map_err(|_e| ServiceError::InternalServerError)?;
+
+                return Ok(LoginResponse {
+                    user: UserResponse {
+                        user_id: user.id,
+                        username: user.username.as_deref().unwrap_or("").to_string(),
+                        email: user.email.as_deref().unwrap_or("").to_string(),
+                        avatar: user.avatar.as_deref().unwrap_or("").to_string(),
+                    },
+                    token,
+                });
             }
         }
 
