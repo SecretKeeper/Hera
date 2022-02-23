@@ -1,4 +1,4 @@
-use crate::auth::auth;
+use crate::auth::auth::{self, Role};
 use crate::errors::ServiceError;
 use crate::models::{CreateUser, LoginRequest, LoginResponse, User, UserResponse};
 use crate::schema::users::dsl::*;
@@ -66,7 +66,7 @@ impl Handler<LoginRequest> for DbExecutor {
                     .collect::<String>()
                     .to_string()
             {
-                let token = auth::create_jwt(&user.id, &"user".to_string())
+                let token = auth::create_jwt(&user.id, &Role::from_str("User"))
                     .map_err(|_e| ServiceError::InternalServerError)?;
 
                 return Ok(LoginResponse {
