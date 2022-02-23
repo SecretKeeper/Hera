@@ -1,3 +1,5 @@
+use std::fmt;
+
 use chrono::prelude::*;
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
@@ -22,6 +24,15 @@ impl Role {
     }
 }
 
+impl fmt::Display for Role {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Role::User => write!(f, "User"),
+            Role::Admin => write!(f, "Admin"),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 struct Claims {
     sub: i32,
@@ -29,7 +40,7 @@ struct Claims {
     exp: usize,
 }
 
-pub fn create_jwt(uid: &i32, role: &String) -> Result<String, ServiceError> {
+pub fn create_jwt(uid: &i32, role: &Role) -> Result<String, ServiceError> {
     let expiration = Utc::now()
         .checked_add_signed(chrono::Duration::days(180))
         .expect("valid timestamp")
