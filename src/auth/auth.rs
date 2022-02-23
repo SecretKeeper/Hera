@@ -1,13 +1,12 @@
-use std::fmt;
-
 use chrono::prelude::*;
+use dotenv::dotenv;
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
+use std::{env, fmt};
 
 use crate::errors::ServiceError;
 
 // const BEARER: &str = "Bearer ";
-const JWT_SECRET: &[u8] = b"secret";
 
 #[derive(Clone, PartialEq)]
 pub enum Role {
@@ -41,6 +40,10 @@ struct Claims {
 }
 
 pub fn create_jwt(uid: &i32, role: &Role) -> Result<String, ServiceError> {
+    dotenv().ok();
+
+    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
     let expiration = Utc::now()
         .checked_add_signed(chrono::Duration::days(180))
         .expect("valid timestamp")
@@ -53,6 +56,10 @@ pub fn create_jwt(uid: &i32, role: &Role) -> Result<String, ServiceError> {
     };
 
     let header = Header::new(Algorithm::HS512);
-    encode(&header, &claims, &EncodingKey::from_secret(JWT_SECRET))
-        .map_err(|_| ServiceError::JWTTokenCreationError)
+    encode(
+        &header,
+        &claims,
+        &EncodingKey::from_secret(jwt_secret.as_bytes()),
+    )
+    .map_err(|_| ServiceError::JWTTokenCreationError)
 }
