@@ -1,7 +1,10 @@
 use crate::auth::auth::{self, Role};
 use crate::errors::ServiceError;
-use crate::models::{CreateUser, LoginRequest, LoginResponse, User, UserResponse};
+use crate::models::{
+    ChangePasswordRequest, CreateUser, LoginRequest, LoginResponse, User, UserResponse,
+};
 use crate::schema::users::dsl::*;
+use crate::utils::hash::hash_string;
 use actix::{Handler, Message, SyncContext};
 use blake3::Hasher;
 use diesel::associations::HasTable;
@@ -82,5 +85,27 @@ impl Handler<LoginRequest> for DbExecutor {
         }
 
         Err(ServiceError::Unauthorized)
+    }
+}
+
+impl Message for ChangePasswordRequest {
+    type Result = Result<String, Error>;
+}
+
+impl Handler<ChangePasswordRequest> for DbExecutor {
+    type Result = Result<String, Error>;
+
+    fn handle(
+        &mut self,
+        mut password_request: ChangePasswordRequest,
+        _: &mut SyncContext<Self>,
+    ) -> Self::Result {
+        let conn: &PgConnection = &self.0.get().unwrap();
+
+        let target = users.filter(password.eq(password_request.current_password));
+
+        diesel::update(target).set(password.eq(hash_string(password_request.new_password)));
+
+        Ok("www".to_string())
     }
 }
