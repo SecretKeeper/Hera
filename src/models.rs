@@ -44,3 +44,9 @@ pub struct LoginResponse {
     pub user: UserResponse,
     pub token: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ChangePasswordRequest {
+    pub current_password: String,
+    pub new_password: String,
+}
