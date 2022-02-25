@@ -1,12 +1,10 @@
 use chrono::prelude::*;
 use dotenv::dotenv;
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::{env, fmt};
 
 use crate::errors::ServiceError;
-
-// const BEARER: &str = "Bearer ";
 
 #[derive(Clone, PartialEq)]
 pub enum Role {
@@ -33,10 +31,10 @@ impl fmt::Display for Role {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct Claims {
-    sub: i32,
-    role: String,
-    exp: usize,
+pub struct Claims {
+    pub sub: i32,
+    pub roles: Vec<String>,
+    pub exp: usize,
 }
 
 pub fn create_jwt(uid: &i32, role: &Role) -> Result<String, ServiceError> {
@@ -51,7 +49,7 @@ pub fn create_jwt(uid: &i32, role: &Role) -> Result<String, ServiceError> {
 
     let claims = Claims {
         sub: *uid,
-        role: role.to_string(),
+        roles: vec![role.to_string()],
         exp: expiration as usize,
     };
 
@@ -62,4 +60,23 @@ pub fn create_jwt(uid: &i32, role: &Role) -> Result<String, ServiceError> {
         &EncodingKey::from_secret(jwt_secret.as_bytes()),
     )
     .map_err(|_| ServiceError::JWTTokenCreationError)
+}
+
+pub async fn authorize(token: &str) -> Result<Vec<String>, ServiceError> {
+    dotenv().ok();
+
+    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
+    let decoded = decode::<Claims>(
+        &token,
+        &DecodingKey::from_secret(&jwt_secret.into_bytes()),
+        &Validation::new(Algorithm::HS512),
+    )
+    .map_err(|_| ServiceError::InternalServerError)?;
+
+    // if role == Role::Admin && Role::from_str(&decoded.claims.role) != Role::Admin {
+    //     return Err(ServiceError::InternalServerError);
+    // }
+
+    Ok(decoded.claims.roles)
 }
