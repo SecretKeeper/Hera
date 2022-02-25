@@ -3,6 +3,8 @@ extern crate openssl;
 extern crate diesel_migrations;
 extern crate diesel;
 extern crate gateway_rust;
+use actix_web_httpauth::middleware::HttpAuthentication;
+use controllers::user_controller::change_password;
 use dotenv::dotenv;
 
 use std::env;
@@ -19,7 +21,9 @@ use diesel::{
     r2d2::{self, ConnectionManager},
     PgConnection,
 };
-use gateway_rust::repositories::db::DbExecutor;
+use gateway_rust::{
+    extractors::http_auth_extractor::http_auth_extract, repositories::db::DbExecutor,
+};
 
 embed_migrations!("./migrations");
 
@@ -39,9 +43,12 @@ async fn main() -> std::io::Result<()> {
     let addr = Data::new(SyncArbiter::start(12, move || DbExecutor(pool.clone())));
 
     HttpServer::new(move || {
+        let auth = HttpAuthentication::bearer(http_auth_extract);
+
         App::new()
             .app_data(addr.clone())
             .service(hello)
+            .service(web::scope("/user").wrap(auth).service(change_password))
             .service(web::scope("/auth").service(register).service(login))
     })
     .bind("0.0.0.0:3333")?
