@@ -4,9 +4,11 @@ extern crate dotenv;
 
 pub mod auth;
 pub mod errors;
+pub mod extractors;
 pub mod models;
 pub mod repositories;
 pub mod schema;
+pub mod utils;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
