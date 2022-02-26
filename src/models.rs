@@ -41,8 +41,10 @@ pub struct UserResponse {
 
 #[derive(Debug, Serialize)]
 pub struct LoginResponse {
+    pub access_token: String,
+    pub refresh_token: String,
+    pub expires: String,
     pub user: UserResponse,
-    pub token: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
