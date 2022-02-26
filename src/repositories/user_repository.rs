@@ -89,23 +89,32 @@ impl Handler<LoginRequest> for DbExecutor {
 }
 
 impl Message for ChangePasswordRequest {
-    type Result = Result<String, Error>;
+    type Result = Result<String, ServiceError>;
 }
 
 impl Handler<ChangePasswordRequest> for DbExecutor {
-    type Result = Result<String, Error>;
+    type Result = Result<String, ServiceError>;
 
     fn handle(
         &mut self,
-        mut password_request: ChangePasswordRequest,
+        password_request: ChangePasswordRequest,
         _: &mut SyncContext<Self>,
     ) -> Self::Result {
         let conn: &PgConnection = &self.0.get().unwrap();
 
-        let target = users.filter(password.eq(password_request.current_password));
+        let target = users
+            .filter(id.eq(password_request.uid.unwrap()))
+            .filter(password.eq(hash_string(password_request.current_password)));
 
-        diesel::update(target).set(password.eq(hash_string(password_request.new_password)));
+        let updated_row = diesel::update(target)
+            .set(password.eq(hash_string(password_request.new_password)))
+            .execute(conn)
+            .expect("cant updated password");
 
-        Ok("www".to_string())
+        if updated_row == 0 {
+            return Err(ServiceError::Forbidden);
+        }
+
+        Ok("Password updated successfully".to_string())
     }
 }
