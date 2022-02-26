@@ -15,6 +15,9 @@ pub enum ServiceError {
 
     #[display(fmt = "Error while creating JWT token")]
     JWTTokenCreationError,
+
+    #[display(fmt = "Forbidden")]
+    Forbidden,
 }
 
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
@@ -26,6 +29,7 @@ impl ResponseError for ServiceError {
             }
             ServiceError::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
             ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Unauthorized"),
+            ServiceError::Forbidden => HttpResponse::Forbidden().json("Forbidden"),
             ServiceError::JWTTokenCreationError => {
                 HttpResponse::InternalServerError().json("value")
             }
