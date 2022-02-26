@@ -25,7 +25,8 @@ impl FromRequest for Auth {
     fn from_request(req: &HttpRequest, _: &mut dev::Payload) -> Self::Future {
         dotenv().ok();
 
-        let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+        let jwt_secret =
+            env::var("JWT_ACCESS_TOKEN_SECRET").expect("JWT_ACCESS_TOKEN_SECRET must be set");
 
         match jwt_from_header(req.headers()) {
             Ok(jwt) => {
