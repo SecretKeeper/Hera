@@ -37,39 +37,69 @@ pub struct Claims {
     pub exp: usize,
 }
 
-pub fn create_jwt(uid: &i32, role: &Role) -> Result<String, ServiceError> {
+pub fn create_jwt(uid: &i32, role: &Role) -> Result<(String, String, i64), ServiceError> {
     dotenv().ok();
 
-    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let jwt_access_token_secret =
+        env::var("JWT_ACCESS_TOKEN_SECRET").expect("JWT_ACCESS_TOKEN_SECRET must be set");
 
-    let expiration = Utc::now()
+    let jwt_refresh_token_secret =
+        env::var("JWT_REFRESH_TOKEN_SECRET").expect("JWT_REFRESH_TOKEN_SECRET must be set");
+
+    let access_token_expiration = Utc::now()
         .checked_add_signed(chrono::Duration::days(180))
         .expect("valid timestamp")
         .timestamp();
 
-    let claims = Claims {
+    let refresh_token_expiration = Utc::now()
+        .checked_add_signed(chrono::Duration::days(360))
+        .expect("valid timestamp")
+        .timestamp();
+
+    let access_token_claims = Claims {
         sub: *uid,
         roles: vec![role.to_string()],
-        exp: expiration as usize,
+        exp: access_token_expiration as usize,
+    };
+
+    let refresh_token_claims = Claims {
+        sub: *uid,
+        roles: vec![role.to_string()],
+        exp: refresh_token_expiration as usize,
     };
 
     let header = Header::new(Algorithm::HS512);
-    encode(
+
+    let access_token = encode(
         &header,
-        &claims,
-        &EncodingKey::from_secret(jwt_secret.as_bytes()),
+        &access_token_claims,
+        &EncodingKey::from_secret(jwt_access_token_secret.as_bytes()),
     )
-    .map_err(|_| ServiceError::JWTTokenCreationError)
+    .map_err(|_| ServiceError::JWTTokenCreationError);
+
+    let refresh_token = encode(
+        &header,
+        &refresh_token_claims,
+        &EncodingKey::from_secret(jwt_refresh_token_secret.as_bytes()),
+    )
+    .map_err(|_| ServiceError::JWTTokenCreationError);
+
+    Ok((
+        access_token.unwrap(),
+        refresh_token.unwrap(),
+        access_token_expiration,
+    ))
 }
 
 pub async fn authorize(token: &str) -> Result<Vec<String>, ServiceError> {
     dotenv().ok();
 
-    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let jwt_access_token_secret =
+        env::var("JWT_ACCESS_TOKEN_SECRET").expect("JWT_ACCESS_TOKEN_SECRET must be set");
 
     let decoded = decode::<Claims>(
         &token,
-        &DecodingKey::from_secret(&jwt_secret.into_bytes()),
+        &DecodingKey::from_secret(&jwt_access_token_secret.into_bytes()),
         &Validation::new(Algorithm::HS512),
     )
     .map_err(|_| ServiceError::InternalServerError)?;
