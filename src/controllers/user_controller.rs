@@ -2,7 +2,7 @@ use actix::Addr;
 use actix_web::{
     post,
     web::{Data, Json},
-    Responder,
+    HttpResponse, Responder, ResponseError,
 };
 use gateway_rust::{
     extractors::jwt_data_decode::Auth, models::ChangePasswordRequest, repositories::db::DbExecutor,
@@ -10,11 +10,15 @@ use gateway_rust::{
 
 #[post("/change-password")]
 async fn change_password(
-    (password_request, sub, addr): (Json<ChangePasswordRequest>, Auth, Data<Addr<DbExecutor>>),
+    (mut password_request, sub, addr): (Json<ChangePasswordRequest>, Auth, Data<Addr<DbExecutor>>),
 ) -> impl Responder {
-    println!("Whatttt the fuck? we got the user id: {:?}", sub);
+    password_request.uid = Some(sub.user_id);
+
     let actix_message = addr.send(password_request.into_inner()).await;
     let result = actix_message.unwrap();
 
-    Json(result.ok())
+    match result {
+        Ok(response) => HttpResponse::Ok().body(response),
+        Err(error) => ResponseError::error_response(&error),
+    }
 }
