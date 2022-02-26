@@ -7,6 +7,7 @@ use crate::schema::users::dsl::*;
 use crate::utils::hash::hash_string;
 use actix::{Handler, Message, SyncContext};
 use blake3::Hasher;
+use chrono::NaiveDateTime;
 use diesel::associations::HasTable;
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -69,17 +70,22 @@ impl Handler<LoginRequest> for DbExecutor {
                     .collect::<String>()
                     .to_string()
             {
-                let token = auth::create_jwt(&user.id, &Role::from_str("User"))
-                    .map_err(|_e| ServiceError::InternalServerError)?;
+                let (access_token, refresh_token, expires) =
+                    auth::create_jwt(&user.id, &Role::from_str("User"))
+                        .map_err(|_e| ServiceError::InternalServerError)?;
 
                 return Ok(LoginResponse {
+                    access_token,
+                    refresh_token,
+                    expires: NaiveDateTime::from_timestamp(expires, 0)
+                        .format("%Y-%m-%d %H:%M:%S.%f")
+                        .to_string(),
                     user: UserResponse {
                         user_id: user.id,
                         username: user.username.as_deref().unwrap_or("").to_string(),
                         email: user.email.as_deref().unwrap_or("").to_string(),
                         avatar: user.avatar.as_deref().unwrap_or("").to_string(),
                     },
-                    token,
                 });
             }
         }
