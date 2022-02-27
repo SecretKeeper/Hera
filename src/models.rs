@@ -1,4 +1,4 @@
-use super::schema::users;
+use super::schema::{jwt_tokens, users};
 use chrono::NaiveDateTime;
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
@@ -23,6 +23,26 @@ pub struct CreateUser {
     pub username: String,
     pub email: String,
     pub password: String,
+}
+
+#[derive(Debug, Clone, Queryable, Serialize, Deserialize)]
+pub struct Jwt {
+    pub id: i32,
+    pub user_id: i32,
+    pub access_token: String,
+    pub access_token_expires_at: NaiveDateTime,
+    pub refresh_token: String,
+    pub refresh_token_expires_at: NaiveDateTime,
+}
+
+#[derive(Debug, Insertable, Serialize, Deserialize)]
+#[table_name = "jwt_tokens"]
+pub struct CreateJWT {
+    pub user_id: i32,
+    pub access_token: String,
+    pub access_token_expires_at: NaiveDateTime,
+    pub refresh_token: String,
+    pub refresh_token_expires_at: NaiveDateTime,
 }
 
 #[derive(Debug, Deserialize)]
