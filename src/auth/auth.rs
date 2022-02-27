@@ -1,10 +1,13 @@
+use crate::diesel::RunQueryDsl;
+use crate::models::Jwt;
+use crate::schema::jwt_tokens::dsl::jwt_tokens;
+use crate::{errors::ServiceError, models::CreateJWT};
 use chrono::prelude::*;
+use diesel::PgConnection;
 use dotenv::dotenv;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::{env, fmt};
-
-use crate::errors::ServiceError;
 
 #[derive(Clone, PartialEq)]
 pub enum Role {
@@ -37,7 +40,11 @@ pub struct Claims {
     pub exp: usize,
 }
 
-pub fn create_jwt(uid: &i32, role: &Role) -> Result<(String, String, i64), ServiceError> {
+pub fn create_jwt(
+    uid: &i32,
+    role: &Role,
+    conn: &PgConnection,
+) -> Result<(String, String, i64), ServiceError> {
     dotenv().ok();
 
     let jwt_access_token_secret =
@@ -83,6 +90,17 @@ pub fn create_jwt(uid: &i32, role: &Role) -> Result<(String, String, i64), Servi
         &EncodingKey::from_secret(jwt_refresh_token_secret.as_bytes()),
     )
     .map_err(|_| ServiceError::JWTTokenCreationError);
+
+    diesel::insert_into(jwt_tokens)
+        .values(CreateJWT {
+            user_id: 2,
+            access_token: access_token.as_ref().unwrap().to_string(),
+            access_token_expires_at: NaiveDateTime::from_timestamp(access_token_expiration, 0),
+            refresh_token: refresh_token.as_ref().unwrap().to_string(),
+            refresh_token_expires_at: NaiveDateTime::from_timestamp(refresh_token_expiration, 0),
+        })
+        .get_result::<Jwt>(conn)
+        .expect("cant insert jwt token");
 
     Ok((
         access_token.unwrap(),
