@@ -71,7 +71,7 @@ impl Handler<LoginRequest> for DbExecutor {
                     .to_string()
             {
                 let (access_token, refresh_token, expires) =
-                    auth::create_jwt(&user.id, &Role::from_str("User"))
+                    auth::create_jwt(&user.id, &Role::from_str("User"), conn)
                         .map_err(|_e| ServiceError::InternalServerError)?;
 
                 return Ok(LoginResponse {
