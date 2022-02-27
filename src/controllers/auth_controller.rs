@@ -5,7 +5,7 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use gateway_rust::{
-    models::{CreateUser, LoginRequest},
+    models::{CreateUser, LoginRequest, RevokeTokenRequest},
     repositories::db::DbExecutor,
 };
 
@@ -30,4 +30,14 @@ async fn login((creds, addr): (web::Json<LoginRequest>, Data<Addr<DbExecutor>>))
     let user = actix_message.unwrap();
 
     web::Json(user.ok())
+}
+
+#[post("/revoke-token")]
+async fn revoke_token(
+    (revoke_token_request, addr): (web::Json<RevokeTokenRequest>, Data<Addr<DbExecutor>>),
+) -> impl Responder {
+    let actix_message = addr.send(revoke_token_request.into_inner()).await;
+    let result = actix_message.unwrap();
+
+    web::Json(result.ok())
 }
