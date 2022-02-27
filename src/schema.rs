@@ -1,4 +1,15 @@
 table! {
+    jwt_tokens (id) {
+        id -> Int4,
+        user_id -> Int4,
+        access_token -> Varchar,
+        access_token_expires_at -> Timestamp,
+        refresh_token -> Varchar,
+        refresh_token_expires_at -> Timestamp,
+    }
+}
+
+table! {
     users (id) {
         id -> Int4,
         solana_pubkey -> Nullable<Varchar>,
@@ -12,3 +23,5 @@ table! {
         deleted_at -> Nullable<Timestamp>,
     }
 }
+
+allow_tables_to_appear_in_same_query!(jwt_tokens, users,);
