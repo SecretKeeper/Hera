@@ -1,7 +1,7 @@
-use crate::diesel::RunQueryDsl;
-use crate::models::Jwt;
+use crate::errors::ServiceError;
+use crate::models::token::Jwt;
 use crate::schema::jwt_tokens::dsl::jwt_tokens;
-use crate::{errors::ServiceError, models::CreateJWT};
+use crate::{diesel::RunQueryDsl, models::token::CreateJWT};
 use chrono::prelude::*;
 use diesel::PgConnection;
 use dotenv::dotenv;
