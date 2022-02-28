@@ -5,7 +5,7 @@ use actix_web::{
     HttpResponse, Responder, ResponseError,
 };
 use gateway_rust::{
-    extractors::jwt_data_decode::Auth, models::ChangePasswordRequest, repositories::db::DbExecutor,
+    db::DbExecutor, extractors::jwt_data_decode::Auth, models::settings::ChangePasswordRequest,
 };
 
 #[post("/change-password")]
