@@ -5,8 +5,8 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use gateway_rust::{
-    models::{CreateUser, LoginRequest, RevokeTokenRequest},
-    repositories::db::DbExecutor,
+    db::DbExecutor,
+    models::{auth::LoginRequest, token::RevokeTokenRequest, user::CreateUser},
 };
 
 #[get("/")]
