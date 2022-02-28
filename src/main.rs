@@ -4,7 +4,7 @@ extern crate diesel_migrations;
 extern crate diesel;
 extern crate gateway_rust;
 use actix_web_httpauth::middleware::HttpAuthentication;
-use controllers::{auth_controller::revoke_token, user_controller::change_password};
+use controllers::{auth_controller::revoke_token, settings_controller::change_password};
 use dotenv::dotenv;
 
 use std::env;
@@ -21,9 +21,7 @@ use diesel::{
     r2d2::{self, ConnectionManager},
     PgConnection,
 };
-use gateway_rust::{
-    extractors::http_auth_extractor::http_auth_extract, repositories::db::DbExecutor,
-};
+use gateway_rust::{db::DbExecutor, extractors::http_auth_extractor::http_auth_extract};
 
 embed_migrations!("./migrations");
 
