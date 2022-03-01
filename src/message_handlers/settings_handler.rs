@@ -1,6 +1,6 @@
 use crate::diesel::ExpressionMethods;
 use crate::errors::ServiceError;
-use crate::models::settings::ChangePasswordRequest;
+use crate::models::settings::{ChangeEmailRequest, ChangePasswordRequest};
 use crate::schema::users::dsl::*;
 use crate::utils::hash::hash_string;
 use crate::{db::DbExecutor, models::settings::ChangeUsernameRequest};
@@ -55,7 +55,7 @@ impl Handler<ChangeUsernameRequest> for DbExecutor {
 
         let target = users
             .filter(id.eq(change_username_request.uid.unwrap()))
-            .filter(password.eq(hash_string(change_username_request.current_password)));
+            .filter(password.eq(hash_string(change_username_request.password)));
 
         let updated_row = diesel::update(target)
             .set(username.eq(change_username_request.new_username))
@@ -67,5 +67,36 @@ impl Handler<ChangeUsernameRequest> for DbExecutor {
         }
 
         Ok("Username updated successfully".to_string())
+    }
+}
+
+impl Message for ChangeEmailRequest {
+    type Result = Result<String, ServiceError>;
+}
+
+impl Handler<ChangeEmailRequest> for DbExecutor {
+    type Result = Result<String, ServiceError>;
+
+    fn handle(
+        &mut self,
+        change_email_request: ChangeEmailRequest,
+        _: &mut SyncContext<Self>,
+    ) -> Self::Result {
+        let conn: &PgConnection = &self.0.get().unwrap();
+
+        let target = users
+            .filter(id.eq(change_email_request.uid.unwrap()))
+            .filter(password.eq(hash_string(change_email_request.password)));
+
+        let updated_row = diesel::update(target)
+            .set(email.eq(change_email_request.new_email))
+            .execute(conn)
+            .expect("cant change email");
+
+        if updated_row == 0 {
+            return Err(ServiceError::Forbidden);
+        }
+
+        Ok("Email updated successfully".to_string())
     }
 }
