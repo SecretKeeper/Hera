@@ -5,6 +5,7 @@ use crate::{diesel::RunQueryDsl, models::token::CreateJWT};
 use chrono::prelude::*;
 use diesel::PgConnection;
 use dotenv::dotenv;
+use jsonwebtoken::errors::ErrorKind;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::{env, fmt};
@@ -119,12 +120,18 @@ pub async fn authorize(token: &str) -> Result<Vec<String>, ServiceError> {
         &token,
         &DecodingKey::from_secret(&jwt_access_token_secret.into_bytes()),
         &Validation::new(Algorithm::HS512),
-    )
-    .map_err(|_| ServiceError::InternalServerError)?;
+    );
+    // .map_err(|_| ServiceError::Unauthorized);
 
     // if role == Role::Admin && Role::from_str(&decoded.claims.role) != Role::Admin {
     //     return Err(ServiceError::InternalServerError);
     // }
-
-    Ok(decoded.claims.roles)
+    match decoded {
+        Ok(data) => Ok(data.claims.roles),
+        Err(error) => match *error.kind() {
+            ErrorKind::InvalidToken => Err(ServiceError::InvalidToken),
+            ErrorKind::InvalidIssuer => Err(ServiceError::JWTTokenCreationError),
+            _ => Err(ServiceError::InternalServerError),
+        },
+    }
 }
