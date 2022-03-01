@@ -5,7 +5,9 @@ use actix_web::{
     HttpResponse, Responder, ResponseError,
 };
 use gateway_rust::{
-    db::DbExecutor, extractors::jwt_data_decode::Auth, models::settings::ChangePasswordRequest,
+    db::DbExecutor,
+    extractors::jwt_data_decode::Auth,
+    models::settings::{ChangeEmailRequest, ChangePasswordRequest},
 };
 
 #[post("/change-password")]
@@ -25,11 +27,7 @@ async fn change_password(
 
 #[post("/change-email")]
 async fn change_email(
-    (mut change_email_request, sub, addr): (
-        Json<ChangePasswordRequest>,
-        Auth,
-        Data<Addr<DbExecutor>>,
-    ),
+    (mut change_email_request, sub, addr): (Json<ChangeEmailRequest>, Auth, Data<Addr<DbExecutor>>),
 ) -> impl Responder {
     change_email_request.uid = Some(sub.user_id);
 
