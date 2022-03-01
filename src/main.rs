@@ -4,7 +4,10 @@ extern crate diesel_migrations;
 extern crate diesel;
 extern crate gateway_rust;
 use actix_web_httpauth::middleware::HttpAuthentication;
-use controllers::{auth_controller::revoke_token, settings_controller::change_password};
+use controllers::{
+    auth_controller::revoke_token, settings_controller::change_password,
+    user_controller::change_username,
+};
 use dotenv::dotenv;
 
 use std::env;
@@ -46,7 +49,12 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(addr.clone())
             .service(hello)
-            .service(web::scope("/user").wrap(auth).service(change_password))
+            .service(
+                web::scope("/user")
+                    .wrap(auth)
+                    .service(change_password)
+                    .service(change_username),
+            )
             .service(
                 web::scope("/auth")
                     .service(register)
