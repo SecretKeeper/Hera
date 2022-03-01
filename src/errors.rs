@@ -18,6 +18,12 @@ pub enum ServiceError {
 
     #[display(fmt = "Forbidden")]
     Forbidden,
+
+    #[display(fmt = "Invalid Token")]
+    InvalidToken,
+
+    #[display(fmt = "Invalid Issuer")]
+    InvalidIssuer,
 }
 
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
@@ -30,8 +36,10 @@ impl ResponseError for ServiceError {
             ServiceError::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
             ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Unauthorized"),
             ServiceError::Forbidden => HttpResponse::Forbidden().json("Forbidden"),
+            ServiceError::InvalidToken => HttpResponse::Unauthorized().json("Invalid Token"),
+            ServiceError::InvalidIssuer => HttpResponse::Unauthorized().json("Invalid Issuer"),
             ServiceError::JWTTokenCreationError => {
-                HttpResponse::InternalServerError().json("value")
+                HttpResponse::InternalServerError().json("JWTTOKENCREATEERROR")
             }
         }
     }
