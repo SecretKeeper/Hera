@@ -8,7 +8,10 @@ use diesel::{
     PgConnection,
 };
 
-pub struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>);
+pub struct DbExecutor(
+    pub Pool<ConnectionManager<PgConnection>>,
+    pub Pool<ConnectionManager<PgConnection>>,
+);
 
 impl Actor for DbExecutor {
     type Context = SyncContext<Self>;
