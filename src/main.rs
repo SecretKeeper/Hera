@@ -40,9 +40,19 @@ async fn main() -> std::io::Result<()> {
         .build(manager)
         .expect("Failed to create pool.");
 
+    let whisper_database_url =
+        env::var("WHISPER_DATABASE_URL").expect("WHISPER_DATABASE_URL must be set");
+    let whisper_manager = ConnectionManager::<PgConnection>::new(whisper_database_url);
+
+    let whisper_pool = r2d2::Pool::builder()
+        .build(whisper_manager)
+        .expect("Failed to create whisper database pool.");
+
     embedded_migrations::run(&pool.get().expect("cant get connection pool")).unwrap();
 
-    let addr = Data::new(SyncArbiter::start(12, move || DbExecutor(pool.clone())));
+    let addr = Data::new(SyncArbiter::start(12, move || {
+        DbExecutor(pool.clone(), whisper_pool.clone())
+    }));
 
     HttpServer::new(move || {
         let auth = HttpAuthentication::bearer(http_auth_extract);
