@@ -3,6 +3,7 @@ extern crate openssl;
 extern crate diesel_migrations;
 extern crate diesel;
 extern crate gateway_rust;
+use actix_cors::Cors;
 use actix_web_httpauth::middleware::HttpAuthentication;
 use controllers::{
     auth_controller::revoke_token,
@@ -15,6 +16,7 @@ use std::env;
 
 use actix::SyncArbiter;
 use actix_web::{
+    http,
     web::{self, Data},
     App, HttpServer,
 };
@@ -57,7 +59,19 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let auth = HttpAuthentication::bearer(http_auth_extract);
 
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .allowed_headers(vec![
+                http::header::AUTHORIZATION,
+                http::header::ACCEPT,
+                http::header::CONTENT_TYPE,
+            ])
+            .supports_credentials()
+            .max_age(3600);
+
         App::new()
+            .wrap(cors)
             .app_data(addr.clone())
             .service(hello)
             .service(
@@ -74,7 +88,7 @@ async fn main() -> std::io::Result<()> {
                     .service(revoke_token),
             )
     })
-    .bind("0.0.0.0:3333")?
+    .bind("localhost:3333")?
     .run()
     .await
 }
