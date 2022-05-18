@@ -780,34 +780,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gateway-rust"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-cors",
- "actix-rt",
- "actix-web",
- "actix-web-grants",
- "actix-web-httpauth",
- "actix-web-validator",
- "blake3",
- "chrono",
- "derive_more",
- "diesel",
- "diesel_migrations",
- "dotenv",
- "futures",
- "futures-util",
- "jsonwebtoken",
- "openssl",
- "openssl-probe",
- "serde",
- "serde_json",
- "serde_with",
- "validator",
-]
-
-[[package]]
 name = "generic-array"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -852,6 +824,34 @@ name = "hashbrown"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
+
+[[package]]
+name = "hera"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-cors",
+ "actix-rt",
+ "actix-web",
+ "actix-web-grants",
+ "actix-web-httpauth",
+ "actix-web-validator",
+ "blake3",
+ "chrono",
+ "derive_more",
+ "diesel",
+ "diesel_migrations",
+ "dotenv",
+ "futures",
+ "futures-util",
+ "jsonwebtoken",
+ "openssl",
+ "openssl-probe",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "validator",
+]
 
 [[package]]
 name = "hermit-abi"
