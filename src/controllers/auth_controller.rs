@@ -1,11 +1,14 @@
 use actix::Addr;
+use actix_web::ResponseError;
 use actix_web::{
     get, post,
     web::{self, Data},
     HttpResponse, Responder,
 };
+use actix_web_validator::Json;
 use gateway_rust::{
     db::DbExecutor,
+    errors::ServiceError,
     models::{auth::LoginRequest, token::RevokeTokenRequest, user::CreateUser},
 };
 
@@ -15,13 +18,16 @@ async fn hello() -> impl Responder {
 }
 
 #[post("/signup")]
-async fn register(
-    (new_user, addr): (web::Json<CreateUser>, Data<Addr<DbExecutor>>),
+pub async fn register(
+    (new_user, addr): (Json<CreateUser>, Data<Addr<DbExecutor>>),
 ) -> impl Responder {
     let actix_message = addr.send(new_user.into_inner()).await;
-    let user = actix_message.unwrap();
+    let result = actix_message.unwrap();
 
-    web::Json(user.ok())
+    match result {
+        Ok(response) => HttpResponse::Ok().json(response),
+        Err(error) => ServiceError::error_response(&error),
+    }
 }
 
 #[post("/signin")]
