@@ -21,10 +21,12 @@ pub struct User {
     pub deleted_at: Option<NaiveDateTime>,
 }
 
-#[derive(Debug, Validate, Insertable, Serialize, Deserialize)]
+#[derive(Debug, Deserialize, Validate, Insertable, Serialize)]
 #[table_name = "users"]
 pub struct CreateUser {
+    #[validate(length(min = 3))]
     pub username: String,
+    #[validate(email)]
     pub email: String,
     #[validate(length(min = 8))]
     pub password: String,
