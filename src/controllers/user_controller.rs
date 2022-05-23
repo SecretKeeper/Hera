@@ -4,7 +4,7 @@ use actix_web::{
     web::{Data, Json},
     HttpResponse, Responder, ResponseError,
 };
-use gateway_rust::{
+use hera::{
     db::DbExecutor,
     extractors::jwt_data_decode::Auth,
     models::settings::{ChangePasswordRequest, ChangeUsernameRequest},
