@@ -2,7 +2,7 @@ extern crate openssl;
 #[macro_use]
 extern crate diesel_migrations;
 extern crate diesel;
-extern crate gateway_rust;
+extern crate hera;
 use actix_cors::Cors;
 use actix_web_httpauth::middleware::HttpAuthentication;
 use controllers::{
@@ -27,7 +27,7 @@ use diesel::{
     r2d2::{self, ConnectionManager},
     PgConnection,
 };
-use gateway_rust::{db::DbExecutor, extractors::http_auth_extractor::http_auth_extract};
+use hera::{db::DbExecutor, extractors::http_auth_extractor::http_auth_extract};
 
 embed_migrations!("./migrations");
 
