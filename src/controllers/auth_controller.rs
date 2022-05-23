@@ -6,7 +6,7 @@ use actix_web::{
     HttpResponse, Responder,
 };
 use actix_web_validator::Json;
-use gateway_rust::{
+use hera::{
     db::DbExecutor,
     errors::ServiceError,
     models::{auth::LoginRequest, token::RevokeTokenRequest, user::CreateUser},
@@ -33,9 +33,12 @@ pub async fn register(
 #[post("/signin")]
 async fn login((creds, addr): (web::Json<LoginRequest>, Data<Addr<DbExecutor>>)) -> impl Responder {
     let actix_message = addr.send(creds.into_inner()).await;
-    let user = actix_message.unwrap();
+    let result = actix_message.unwrap();
 
-    web::Json(user.ok())
+    match result {
+        Ok(response) => HttpResponse::Ok().json(response),
+        Err(error) => ServiceError::error_response(&error),
+    }
 }
 
 #[post("/revoke-token")]
